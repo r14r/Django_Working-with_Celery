@@ -1,0 +1,6 @@
+django>=2.2.1
+sqlalchemy>=1.0.14
+celery>=5.0.5
+djangorestframework==3.8.2
+requests==2.19.1
+six

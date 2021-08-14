@@ -1,0 +1,69 @@
+version: '3.5'
+services:
+
+  app:
+    container_name: playground_celery_app
+
+    build: 
+      context: .\conf\app
+      dockerfile: Dockerfile.app
+
+    image: &app app
+    restart: "no"
+    # command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: [ "sleep", "inf"]
+
+    env_file: &envfile
+      - .env
+
+    ports:
+      - "8000:8000"
+    volumes:
+      - .\workspace:/workspace
+
+    depends_on:
+      - broker
+
+  worker:
+    container_name: playground_celery_worker
+
+    build: .
+    image: *app
+    restart: "no"
+    env_file: *envfile
+    command: ["celery", "--app=worker.worker.app", "worker", "--concurrency=1", "--hostname=worker@%h", "--loglevel=INFO"]
+    volumes:
+      - .\Workspace:/workspace
+    depends_on:
+      - broker
+    
+  flower:
+    container_name: playground_celery_flower
+
+    image: zoomeranalytics/flower:0.9.1-4.0.2
+    restart: "no"
+    env_file: *envfile
+    ports:
+      - "5555:5555"
+    depends_on:
+      - broker
+
+  broker:
+    container_name: playground_celery_broker
+
+    # image: rabbitmq:3-management
+    build: 
+      context: .\conf\broker
+      dockerfile: Dockerfile.broker
+
+#   volumes: 
+#      - .\etc\conf.d:/etc/rabbitmq/conf.d
+
+    env_file: *envfile
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+networks:
+  playground_celery_network:
+    name: playground_celery_network
