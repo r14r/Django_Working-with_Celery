@@ -1,17 +1,21 @@
-
-
 import os
+
+# Celery settings
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost'
+ACCEPT_CONTENT = ['json']
+RESULT_BACKEND = 'db+sqlite:///results.sqlite'
+TASK_SERIALIZER = 'json'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ')myo10vwg%@b1+xf11z6#x-66mpi^9k!ilwry8v^4-8so$3d8s'
+SECRET_KEY = 'l!t+dmzf97rt9s*yrsux1py_1@odvz1szr&6&m!f@-nxq6k%%p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+#
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -23,6 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'debug_toolbar',
+    'app_celery', 
 ]
 
 MIDDLEWARE = [
@@ -33,9 +39,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
-ROOT_URLCONF = 'api.urls'
+ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
     {
@@ -53,7 +60,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'api.wsgi.application'
+WSGI_APPLICATION = 'main.wsgi.application'
 
 
 CELERY = {
@@ -67,48 +74,66 @@ CELERY = {
 
 DATA_PATH = '/app/data'
 
-
 # Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',    },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/2.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.0/howto/static-files/
-
 STATIC_URL = '/static/'
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        },
+    },
+    'handlers': {
+        # this is what you see in runserver console
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+        # this handler logs to file
+        'file': {  
+            'class': 'logging.FileHandler',
+            'filename': os.path.normpath(os.path.join(BASE_DIR, 'logs/django.log')),  
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        'django': {
+            # log to console and file handlers
+            'handlers': ['console', 'file'],  
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR'),
+             'propagate': True,
+        },
+    },
+}
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]

@@ -1,5 +1,4 @@
 app/data/
-!test.env
 
 # celery beat
 *.bak
